@@ -67,4 +67,4 @@ This Google Apps Script is designed to automate a process associated with a Goog
 
 This script effectively streamlines the handling of form submissions with file uploads, organizing them into designated folders and notifying relevant stakeholders, all automated to save time and reduce manual file management tasks.
 
-created by John Seargeant with a little help from GPT and Bard.  03Feb2024
+created by [John Seargeant](https://github.com/John-Sarge) with a little help from GPT and Bard.  03Feb2024
