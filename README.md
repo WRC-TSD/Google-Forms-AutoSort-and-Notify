@@ -1,16 +1,22 @@
 # Google-Forms-AutoSort-and-Notify
 
+This was made to automate some of the work we were doing in processing purchase orders. The main purpose was to minimize the moving of the purchase documents and have them go straight to our purchasing folder in our Google Share Drive.
+Be advised, Google Forms cannot have file upload options when they are created/stored on a Shared Drive. Create the form on your personal/work drive.
 
 1\. Create the Google Form:
 
+-   The script will create the folder name in the order the questions on the form are in.
 -   Add your short answer questions.
 -   Add a "File upload" question and set the minimum number of files to 10.
--   Optional: If you want the folder name to include specific answers, add additional short answer questions for those elements.
+-   I advise that you test the form once and upload a test file so that way you can get the original upload folder location.
 
 2\. Write a Google Apps Script:
 
 -   Go to "Tools" > "Script editor" in your Google Form.
--   Paste the code from the script.js file in this repo, modifying it based on your needs:
+-   Paste the code from the script.js file in this repo, modifying it based on your needs, then save it.
+-   Add a new trigger, for "Choose which function to run" select "onFormSubmit", for "Select event type" select "On form submit".
+-   At some point it will ask for authorization, accept all.
+-   Test your form!
 
 
 
