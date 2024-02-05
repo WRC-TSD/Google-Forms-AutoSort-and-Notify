@@ -67,36 +67,56 @@ This script is a comprehensive solution for managing file uploads through Google
 
 # Google-Drive-Sorting-Script
 
-The given Google Drive App Script is designed to automate the organization of subfolders within a specified parent folder on Google Drive based on predefined sorting criteria. Here's a breakdown of its functionality:
+This Google Apps Script is designed to automate the organization of subfolders within a Google Drive folder. It uses specific naming conventions to sort subfolders into categorized subfolders based on predefined keywords. Here's a breakdown of its functionality and how each part of the code contributes to the overall process:
 
-### Main Function: `organizeSubfolders()`
+### `organizeSubfolders()`
 
-1.  Initialization: It starts with defining a `folderId` for the parent folder and a list of `sortingWords` that are used to categorize subfolders.
-2.  Subfolder Sorting and Organizing:
-    -   Retrieves all subfolders within the specified parent folder.
-    -   Iterates through each subfolder, examining its name which is expected to follow a specific naming convention (e.g., "date_word_otherinfo" where "word" is one of the `sortingWords`).
-    -   If a subfolder's name matches the expected format and contains one of the `sortingWords`, it further processes this subfolder.
-    -   Assumes the subfolder's name starts with a date in "yyMMddHHmm" format, validates this, and extracts the month part of the date.
-    -   Constructs a new path for the subfolder based on the sorting word and the month extracted from the subfolder's name.
-    -   Creates the necessary subfolder structure within the parent folder based on this new path and moves the subfolder to its new location.
+-   Purpose: Serves as the entry point of the script. It initializes the process by identifying the parent folder in Google Drive using its folder ID and then starts the recursive scanning and organization process by calling `scanAndOrganizeSubfolders` with the parent folder as both the current folder to scan and the base folder for organization.
+-   Key Actions:
+    -   Retrieves the parent folder from Google Drive using `DriveApp.getFolderById(folderId)`.
+    -   Calls `scanAndOrganizeSubfolders`, passing it the parent folder twice: once as the folder to scan and once as the base for organizing subfolders. This ensures that the organization process always has a reference to the top-level folder where the sorted subfolders should be placed.
 
-### Supporting Functions
+### `scanAndOrganizeSubfolders(folder, baseParentFolder)`
 
--   `moveSubfolder(subfolder, newParentFolder)`: This function is responsible for moving a subfolder (along with all its files and sub-subfolders) to a new parent folder. It copies all files to the new location, recursively moves sub-subfolders, and then trashes the original subfolder.
+-   Purpose: Recursively scans through all subfolders, starting from a specified folder, and organizes them based on predefined sorting words (`"SENT"`, `"HOLD"`, `"COMPLETE"`). It uses the base parent folder to maintain a consistent organization structure at the root level.
+-   Key Actions:
+    -   Iterates through all subfolders of the given folder.
+    -   Splits the name of each subfolder to analyze its components, checking for a match with predefined sorting words.
+    -   If a match is found and the folder name includes a valid date string, it constructs a new path for organizing this subfolder and calls `createSubfolders` to ensure the path exists within the base parent folder.
+    -   Moves the matching subfolder to the newly created or existing path using `moveSubfolder`.
+    -   Recursively calls itself for each subfolder, allowing the script to scan and organize subfolders at all levels of the hierarchy.
 
--   `createSubfolders(folder, subfolderPath)`: Creates the necessary hierarchy of subfolders within a specified parent folder based on a given path. It ensures that each level of the folder structure exists, creating new subfolders as necessary.
+### `moveSubfolder(subfolder, newParentFolder)`
 
--   `findOrCreateFolder(parentFolder, folderName)`: Looks for a subfolder by name within a given parent folder. If the subfolder exists, it is returned; otherwise, a new subfolder with the specified name is created and returned.
+-   Purpose: Moves a specified subfolder, including all its files and sub-subfolders, into a new parent folder. It then trashes the original subfolder after moving its contents.
+-   Key Actions:
+    -   Creates a new subfolder under the new parent folder with the same name as the original.
+    -   Copies all files from the original subfolder to the new subfolder.
+    -   Recursively handles all sub-subfolders using the same process, ensuring a complete move.
+    -   Sets the original subfolder to be trashed, effectively removing it from its previous location.
 
--   `createTrigger()`: Sets up a time-based trigger that automatically executes the `organizeSubfolders` function every 5 minutes. This ensures that the folder organization process runs automatically at regular intervals without manual intervention.
+### `createSubfolders(folder, subfolderPath)`
 
-### Process Flow
+-   Purpose: Creates a nested folder structure based on a given path, starting from a specified base folder. If any part of the path already exists, it reuses the existing folders; otherwise, it creates new ones.
+-   Key Actions:
+    -   Splits the `subfolderPath` into its components and iteratively checks for the existence of each subfolder in the path.
+    -   If a subfolder does not exist, it is created under the current level. This process ensures the desired folder hierarchy is established within the base folder.
 
-1.  Organization:
-    -   Subfolders are sorted and reorganized based on specific keywords found in their names and the month extracted from the date portion of their names.
-2.  Automation:
-    -   The script includes a mechanism for automatic execution, ensuring that the organization process is maintained continuously without requiring manual triggers.
+### `findOrCreateFolder(parentFolder, folderName)`
 
-This script effectively automates the management of files and folders within a Google Drive, making it easier to keep a large number of items neatly organized according to specified criteria.
+-   Purpose: Checks if a folder with a given name exists under a specified parent folder. If it exists, the folder is returned; otherwise, a new folder with that name is created.
+-   Key Actions:
+    -   Searches for a folder by name under the given parent folder.
+    -   Returns the folder if found; otherwise, creates and returns a new folder with the specified name.
+
+### `createTrigger()`
+
+-   Purpose: Sets up an automatic trigger that runs the `organizeSubfolders` function every 5 minutes, ensuring the folder organization process is regularly executed without manual intervention.
+-   Key Actions:
+    -   Uses Google Apps Script's `ScriptApp.newTrigger` method to create a time-based trigger for the `organizeSubfolders` function.
+
+### Summary
+
+This script automates the organization of subfolders in Google Drive by sorting them into categories based on their names. It leverages recursive scanning to ensure all levels of folders are organized, and it maintains a consistent structure by always referring to a base parent folder for the placement of sorted subfolders. The script is designed for efficiency and scalability, ensuring that even as new subfolders are added or existing ones are renamed, they are automatically sorted into the correct categories.
 
 created by [John Seargeant](https://github.com/John-Sarge) with a little help from GPT and Bard.  03Feb2024
