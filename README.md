@@ -1,4 +1,4 @@
-# Google-Forms-AutoSort-and-Notify
+# Google-Forms-Submission-Script (the sorting part is further down this readme)
 
 This was made to automate some of the work we were doing in processing purchase orders. The main purpose was to minimize the moving of the purchase documents and have them go straight to our purchasing folder in our Google Share Drive.
 Be advised, Google Forms cannot have file upload options when they are created/stored on a Shared Drive. Create the form on your personal/work drive.
@@ -13,7 +13,7 @@ Be advised, Google Forms cannot have file upload options when they are created/s
 2\. Write a Google Apps Script:
 
 -   Go to "Tools" > "Script editor" in your Google Form.
--   Paste the code from the script.js file in this repo, modifying it based on your needs, then save it.
+-   Paste the code from the form_submission.js file in this repo, modifying it based on your needs, then save it.
 -   Add a new trigger, for "Choose which function to run" select "onFormSubmit", for "Select event type" select "On form submit".
 -   At some point it will ask for authorization, accept all.
 -   Test your form!
@@ -64,5 +64,39 @@ The `onFormSubmit` function includes a `try-catch` block to gracefully handle an
 3.  Processing and Notification: The script processes the submission by organizing files into folders on Google Drive and notifies relevant parties via email with details of the submission and links to the documents.
 
 This script is a comprehensive solution for managing file uploads through Google Forms, automating the process of file organization, and communication with stakeholders. It leverages Google Apps Script's integration with Google Drive and Gmail to streamline workflows involving form submissions.
+
+# Google-Drive-Sorting-Script
+
+The given Google Drive App Script is designed to automate the organization of subfolders within a specified parent folder on Google Drive based on predefined sorting criteria. Here's a breakdown of its functionality:
+
+### Main Function: `organizeSubfolders()`
+
+1.  Initialization: It starts with defining a `folderId` for the parent folder and a list of `sortingWords` that are used to categorize subfolders.
+2.  Subfolder Sorting and Organizing:
+    -   Retrieves all subfolders within the specified parent folder.
+    -   Iterates through each subfolder, examining its name which is expected to follow a specific naming convention (e.g., "date_word_otherinfo" where "word" is one of the `sortingWords`).
+    -   If a subfolder's name matches the expected format and contains one of the `sortingWords`, it further processes this subfolder.
+    -   Assumes the subfolder's name starts with a date in "yyMMddHHmm" format, validates this, and extracts the month part of the date.
+    -   Constructs a new path for the subfolder based on the sorting word and the month extracted from the subfolder's name.
+    -   Creates the necessary subfolder structure within the parent folder based on this new path and moves the subfolder to its new location.
+
+### Supporting Functions
+
+-   `moveSubfolder(subfolder, newParentFolder)`: This function is responsible for moving a subfolder (along with all its files and sub-subfolders) to a new parent folder. It copies all files to the new location, recursively moves sub-subfolders, and then trashes the original subfolder.
+
+-   `createSubfolders(folder, subfolderPath)`: Creates the necessary hierarchy of subfolders within a specified parent folder based on a given path. It ensures that each level of the folder structure exists, creating new subfolders as necessary.
+
+-   `findOrCreateFolder(parentFolder, folderName)`: Looks for a subfolder by name within a given parent folder. If the subfolder exists, it is returned; otherwise, a new subfolder with the specified name is created and returned.
+
+-   `createTrigger()`: Sets up a time-based trigger that automatically executes the `organizeSubfolders` function every 5 minutes. This ensures that the folder organization process runs automatically at regular intervals without manual intervention.
+
+### Process Flow
+
+1.  Organization:
+    -   Subfolders are sorted and reorganized based on specific keywords found in their names and the month extracted from the date portion of their names.
+2.  Automation:
+    -   The script includes a mechanism for automatic execution, ensuring that the organization process is maintained continuously without requiring manual triggers.
+
+This script effectively automates the management of files and folders within a Google Drive, making it easier to keep a large number of items neatly organized according to specified criteria.
 
 created by [John Seargeant](https://github.com/John-Sarge) with a little help from GPT and Bard.  03Feb2024
