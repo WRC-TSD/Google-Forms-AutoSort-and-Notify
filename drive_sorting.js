@@ -7,7 +7,7 @@ function organizeSubfolders() {
 
 // Recursively scans and organizes subfolders within a given folder according to sorting words
 function scanAndOrganizeSubfolders(folder, baseParentFolder) {
-  const sortingWords = ["SENT", "HOLD", "COMPLETE"]; // Define sorting criteria
+  const sortingWords = ["SENT", "HOLD", "COMPLETE", "CANCEL"]; // Define sorting criteria
 
   const subfolders = folder.getFolders(); // Retrieve all subfolders in the current folder
   while (subfolders.hasNext()) {
