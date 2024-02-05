@@ -1,27 +1,33 @@
 function organizeSubfolders() {
-  const folderId = "parent folder id";
+  const folderId = "drive folder id";
+  const parentFolder = DriveApp.getFolderById(folderId);
+  scanAndOrganizeSubfolders(parentFolder, parentFolder); // Pass parentFolder twice, first as current scanning folder, second as the base for organizing
+}
+
+function scanAndOrganizeSubfolders(folder, baseParentFolder) {
   const sortingWords = ["SENT", "HOLD", "COMPLETE"];
 
-  const parentFolder = DriveApp.getFolderById(folderId);
-  const subfolders = parentFolder.getFolders();
+  const subfolders = folder.getFolders();
   while (subfolders.hasNext()) {
     const subfolder = subfolders.next();
     const nameComponents = subfolder.getName().split("_");
     if (nameComponents.length >= 2 && sortingWords.includes(nameComponents[1])) {
       const word = nameComponents[1];
-      // Assuming the date is embedded at the start of the folder name in yyMMddHHmm format
-      const dateString = nameComponents[0]; // Full date string
-      if (dateString.length === 10) { // Validating the date string length
-        const month = dateString.substring(2, 4); // Extracting the MM part
-        const subfolderPath = `${word}/${month}`; // Using MM for subfolder naming
-        const newParentFolder = createSubfolders(parentFolder, subfolderPath);
+      const dateString = nameComponents[0];
+      if (dateString.length === 10) {
+        const month = dateString.substring(2, 4);
+        const subfolderPath = `${word}/${month}`;
+        const newParentFolder = createSubfolders(baseParentFolder, subfolderPath); // Always use baseParentFolder for organizing
         moveSubfolder(subfolder, newParentFolder);
       }
     }
+    // Continue scanning recursively with the baseParentFolder unchanged
+    scanAndOrganizeSubfolders(subfolder, baseParentFolder);
   }
 }
 
 function moveSubfolder(subfolder, newParentFolder) {
+  // This function remains unchanged
   const newSubfolder = newParentFolder.createFolder(subfolder.getName());
   const files = subfolder.getFiles();
   while (files.hasNext()) {
@@ -33,12 +39,11 @@ function moveSubfolder(subfolder, newParentFolder) {
     const subSubfolder = subSubfolders.next();
     moveSubfolder(subSubfolder, newSubfolder);
   }
-
-  // After moving all contents, move the original subfolder to the Trash
   subfolder.setTrashed(true);
 }
 
 function createSubfolders(folder, subfolderPath) {
+  // This function remains unchanged
   let currentFolder = folder;
   const subfolders = subfolderPath.split("/");
   for (const subfolderName of subfolders) {
@@ -49,15 +54,17 @@ function createSubfolders(folder, subfolderPath) {
 }
 
 function findOrCreateFolder(parentFolder, folderName) {
+  // This function remains unchanged
   const folders = parentFolder.getFoldersByName(folderName);
   if (folders.hasNext()) {
-    return folders.next(); // Returns the first found folder if it exists
+    return folders.next();
   } else {
-    return parentFolder.createFolder(folderName); // Creates a new folder if none was found
+    return parentFolder.createFolder(folderName);
   }
 }
 
 function createTrigger() {
+  // This function remains unchanged
   ScriptApp.newTrigger("organizeSubfolders")
     .timeBased()
     .everyMinutes(5)
