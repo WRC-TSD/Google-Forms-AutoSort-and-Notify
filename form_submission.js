@@ -1,89 +1,90 @@
 // Constants for configuration
-const PARENT_FOLDER_ID = 'put the original google form file upload location here'; // ID of the original folder for temporary storage
-const TARGET_SHARED_DRIVE_ID = 'put the folder you want here'; // Target shared drive ID where the final folder will be created
-const EMAIL_ADDRESS = 'email address here. for multiple separate with a comma'; // Recipient(s) email address(es)
+const TARGET_SHARED_DRIVE_ID = 'Target shared drive ID'; // Target shared drive ID where the final folder will be created
+const EMAIL_ADDRESS = 'email address here, for multiple separate with a comma'; // Recipient(s) email address(es)
 
 // Exclusions for naming and email content
-const EXCLUDE_FROM_FOLDER_NAME = ["Question 1 Title", "Question 5 Title", "Question 6 Title", "Question 7 Title"]; // Titles of questions to exclude from folder name
-const EXCLUDE_FROM_EMAIL_BODY = ["Question 2 Title"]; // Titles of questions to exclude from email body
+const EXCLUDE_FROM_FOLDER_NAME = [
+  "Question 1 Title", 
+  "Question 6 Title", 
+  "Question 7 Title", 
+  "Question 8 Title"
+]; // Titles of form questions to exclude from the folder name
+const EXCLUDE_FROM_EMAIL_BODY = [
+  "Question 5 Title"
+]; // Titles of form questions to exclude from the email body
 
 // Initializes the script by creating a trigger for form submission
-const initialize = () => {
+function initialize() {
   const form = FormApp.getActiveForm(); // Gets the current Google Form
   ScriptApp.newTrigger('onFormSubmit') // Creates a new trigger
-    .forForm(form) // For the current form
-    .onFormSubmit() // That activates on form submission
-    .create(); // Creates the trigger
-};
+    .forForm(form) // Associates the trigger with the current form
+    .onFormSubmit() // Sets the trigger to fire on form submission
+    .create(); // Finalizes and creates the trigger
+}
 
 // Handles form submission
-const onFormSubmit = (e) => {
+function onFormSubmit(e) {
   try {
-    // Processes the form submission
-    const timestamp = Utilities.formatDate(new Date(), "America/New_York", "yyyyMMdd-HHmm"); // Formats current timestamp
-    const folderName = buildFolderName(e.response.getItemResponses(), timestamp); // Builds the folder name
-    const emailSubject = "WRC Order Submission: " + folderName; // Sets the email subject
-
-    // Creates a temporary folder in the parent directory
-    const tempFolder = DriveApp.getFolderById(PARENT_FOLDER_ID).createFolder(folderName);
-
-    // Processes and moves uploaded files to the temporary folder
-    e.response.getItemResponses()
-      .filter(itemResponse => itemResponse.getItem().getType() === FormApp.ItemType.FILE_UPLOAD) // Filters for file upload responses
-      .forEach(itemResponse => {
-        const fileIds = itemResponse.getResponse(); // Gets file IDs
-        fileIds.forEach(fileId => {
-          DriveApp.getFileById(fileId).moveTo(tempFolder); // Moves files to the temporary folder
-        });
-      });
-
-    // Creates a new folder in the target shared drive and copies files there
+    const timestamp = Utilities.formatDate(new Date(), "America/New_York", "yyyyMMdd-HHmm"); // Generates a timestamp for uniqueness
+    const folderName = buildFolderName(e.response.getItemResponses(), timestamp); // Builds a folder name based on form responses
+    
+    // Creates a new folder in the shared drive with the constructed folder name
     const sharedDriveFolder = DriveApp.getFolderById(TARGET_SHARED_DRIVE_ID).createFolder(folderName);
-    const files = tempFolder.getFiles(); // Gets all files in the temporary folder
-    while (files.hasNext()) {
-      const file = files.next();
-      file.makeCopy(file.getName(), sharedDriveFolder); // Copies each file to the shared drive folder
-    }
+    Logger.log("Shared drive folder created: " + folderName); // Logs the creation for debugging
 
-    // Builds the email body excluding specified responses and file uploads
-    let emailBody = `<strong>Google Drive Folder containing the order documents:</strong> <a href="${sharedDriveFolder.getUrl()}">${sharedDriveFolder.getUrl()}</a><br/><br/>`;
-    e.response.getItemResponses().forEach(itemResponse => {
-      const questionTitle = itemResponse.getItem().getTitle();
-      if (itemResponse.getItem().getType() !== FormApp.ItemType.FILE_UPLOAD && !EXCLUDE_FROM_EMAIL_BODY.includes(questionTitle)) {
-        const response = itemResponse.getResponse(); // Gets the response
-        emailBody += `<strong>${questionTitle}:</strong> ${Array.isArray(response) ? response.join(", ") : response}<br/><br/>`; // Adds to email body
-      }
-    });
+    moveUploadedFiles(e.response.getItemResponses(), sharedDriveFolder); // Moves uploaded files to the shared drive folder
 
-    // Sends the email with the constructed body
-    MailApp.sendEmail({
-      to: EMAIL_ADDRESS,
-      subject: emailSubject,
-      htmlBody: emailBody // Specifies the HTML content for the email
-    });
-
-    // Optionally deletes the temporary folder
-    tempFolder.setTrashed(true); // Moves the temporary folder to trash
+    sendEmail(e.response, sharedDriveFolder, folderName); // Sends an email notification about the form submission
   } catch (error) {
-    Logger.log("Error: " + error.toString()); // Logs any errors
+    Logger.log("Error: " + error.toString()); // Logs any errors that occur during the execution
   }
-};
+}
 
-// Builds the folder name based on form responses and timestamp
+// Builds the folder name based on form responses and timestamp, excluding file uploads and specific titles
 function buildFolderName(itemResponses, timestamp) {
   let parts = itemResponses
-    .filter(response => {
-      // Excludes file uploads and specified titles from folder name
-      return response.getItem().getType() !== FormApp.ItemType.FILE_UPLOAD &&
-             !EXCLUDE_FROM_FOLDER_NAME.includes(response.getItem().getTitle());
-    })
+    .filter(response => response.getItem().getType() !== FormApp.ItemType.FILE_UPLOAD && !EXCLUDE_FROM_FOLDER_NAME.includes(response.getItem().getTitle()))
     .map(response => {
-      // Processes each response for folder naming
       let answer = response.getResponse();
-      if (Array.isArray(answer)) {
-        return answer.join(", ");
-      }
-      return answer.toString();
+      return Array.isArray(answer) ? answer.join(", ") : answer.toString(); // Formats the response for inclusion in the folder name
     });
-  return timestamp + "_" + "PENDING" + "_" + parts.join("_"); // Constructs folder name
+  return timestamp + "_" + parts.join("_"); // Combines the timestamp and filtered responses to form a unique folder name
+}
+
+// Moves uploaded files directly to the shared drive folder using their IDs
+function moveUploadedFiles(itemResponses, sharedDriveFolder) {
+  itemResponses
+    .filter(itemResponse => itemResponse.getItem().getType() === FormApp.ItemType.FILE_UPLOAD) // Filters for file upload responses
+    .forEach(itemResponse => {
+      const fileIds = itemResponse.getResponse(); // Gets the file IDs from the response
+      fileIds.forEach(fileId => {
+        const file = DriveApp.getFileById(fileId); // Retrieves the file from Drive
+        try {
+          file.moveTo(sharedDriveFolder); // Moves the file to the designated shared drive folder
+          Logger.log("File moved to shared drive folder: " + file.getName()); // Logs the file move for debugging
+        } catch (error) {
+          Logger.log("Error moving file to shared drive folder: " + error.toString()); // Logs any errors during the file move
+        }
+      });
+    });
+}
+
+// Builds and sends the email with details of the form submission, excluding file uploads and specific titles
+function sendEmail(response, sharedDriveFolder, folderName) {
+  let emailBody = `<strong>Google Drive Folder containing the order documents:</strong> <a href="${sharedDriveFolder.getUrl()}">${sharedDriveFolder.getUrl()}</a><br/><br/>`; // Starts building the email body with a link to the shared folder
+  response.getItemResponses().forEach(itemResponse => {
+    if (!EXCLUDE_FROM_EMAIL_BODY.includes(itemResponse.getItem().getTitle()) && itemResponse.getItem().getType() !== FormApp.ItemType.FILE_UPLOAD) {
+      const questionTitle = itemResponse.getItem().getTitle(); // Gets the question title
+      const response = itemResponse.getResponse(); // Gets the response
+      // Appends each question and response to the email body, excluding specified questions
+      emailBody += `<strong>${questionTitle}:</strong> ${Array.isArray(response) ? response.join(", ") : response}<br/><br/>`;
+    }
+  });
+
+  // Sends the email to the specified recipient(s) with the constructed email body
+  MailApp.sendEmail({
+    to: EMAIL_ADDRESS,
+    subject: "WRC Order Submission: " + folderName, // Customizes the email subject with the folder name
+    htmlBody: emailBody // Sets the email body
+  });
 }
