@@ -47,19 +47,22 @@ function isSubfolderAlreadySorted(subfolder, baseParentFolder, expectedParentFol
   return false; // Subfolder is not correctly sorted
 }
 
-// Moves a subfolder to a new parent folder, including all its contents, then trashes the original
+// Moves a subfolder to a new parent folder, including all its contents
 function moveSubfolder(subfolder, newParentFolder) {
-  const newSubfolder = newParentFolder.createFolder(subfolder.getName()); // Create new subfolder in target location
-  const files = subfolder.getFiles(); // Get all files in the original subfolder
+  const targetSubfolder = newParentFolder.createFolder(subfolder.getName()); // Create a new subfolder in the new parent
+
+  const files = subfolder.getFiles(); // Move all files in the original subfolder to the new one
   while (files.hasNext()) {
     const file = files.next();
-    file.makeCopy(file.getName(), newSubfolder); // Copy each file to the new subfolder
+    file.moveTo(targetSubfolder); // Move each file
   }
-  const subSubfolders = subfolder.getFolders(); // Get all sub-subfolders
+
+  const subSubfolders = subfolder.getFolders(); // Recursively move all sub-subfolders
   while (subSubfolders.hasNext()) {
     const subSubfolder = subSubfolders.next();
-    moveSubfolder(subSubfolder, newSubfolder); // Recursively move each sub-subfolder
+    moveSubfolder(subSubfolder, targetSubfolder); // Move each sub-subfolder
   }
+
   subfolder.setTrashed(true); // Trash the original subfolder after moving its contents
 }
 
@@ -68,19 +71,19 @@ function createSubfolders(folder, subfolderPath) {
   let currentFolder = folder;
   const subfolders = subfolderPath.split("/"); // Split path into components
   for (const subfolderName of subfolders) {
-    let subfolder = findOrCreateFolder(currentFolder, subfolderName); // Find or create each component of the path
-    currentFolder = subfolder; // Move down the folder hierarchy
+    let subfolder = findOrCreateFolder(currentFolder, subfolderName); // Find or create each path component
+    currentFolder = subfolder; // Navigate down the folder hierarchy
   }
   return currentFolder; // Return the final folder in the path
 }
 
 // Finds or creates a folder by name under a specified parent folder
 function findOrCreateFolder(parentFolder, folderName) {
-  const folders = parentFolder.getFoldersByName(folderName); // Search for folder by name
+  const folders = parentFolder.getFoldersByName(folderName); // Search for the folder by name
   if (folders.hasNext()) {
     return folders.next(); // Return the folder if it exists
   } else {
-    return parentFolder.createFolder(folderName); // Create and return a new folder if it doesn't exist
+    return parentFolder.createFolder(folderName); // Otherwise, create a new folder
   }
 }
 
