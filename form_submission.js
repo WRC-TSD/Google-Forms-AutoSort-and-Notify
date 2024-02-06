@@ -20,7 +20,7 @@ const initialize = () => {
 const onFormSubmit = (e) => {
   try {
     // Processes the form submission
-    const timestamp = Utilities.formatDate(new Date(), "America/New_York", "yyMMddHHmm"); // Formats current timestamp
+    const timestamp = Utilities.formatDate(new Date(), "America/New_York", "yyyyMMdd-HHmm"); // Formats current timestamp
     const folderName = buildFolderName(e.response.getItemResponses(), timestamp); // Builds the folder name
     const emailSubject = "WRC Order Submission: " + folderName; // Sets the email subject
 
