@@ -16,7 +16,7 @@ function scanAndOrganizeSubfolders(folder, baseParentFolder) {
     if (nameComponents.length >= 2 && sortingWords.includes(nameComponents[1])) {
       const word = nameComponents[1]; // The sorting word from folder name
       const dateString = nameComponents[0]; // The date string from folder name
-      if (dateString.length === 15) { // Ensure date string is of expected length for 'yyyyMMdd-HHmm'
+      if (dateString.length === 13) { // Ensure date string is of expected length
         const month = dateString.substring(4, 6); // Extract month from date string
         // Check if subfolder is already sorted correctly to avoid unnecessary moves
         if (!isSubfolderAlreadySorted(subfolder, baseParentFolder, word, month)) {
