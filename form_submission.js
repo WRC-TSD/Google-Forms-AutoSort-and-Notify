@@ -85,5 +85,5 @@ function buildFolderName(itemResponses, timestamp) {
       }
       return answer.toString();
     });
-  return timestamp + "_" + "Pending" + "_" + parts.join("_"); // Constructs folder name
+  return timestamp + "_" + "PENDING" + "_" + parts.join("_"); // Constructs folder name
 }
