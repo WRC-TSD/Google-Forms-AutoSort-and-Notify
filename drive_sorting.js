@@ -7,7 +7,7 @@ function organizeSubfolders() {
 
 // Recursively scans and organizes subfolders within a given folder according to sorting words
 function scanAndOrganizeSubfolders(folder, baseParentFolder) {
-  const sortingWords = ["SENT", "HOLD", "COMPLETE", "CANCEL"]; // Define sorting criteria
+  const sortingWords = ["EXAMPLE", "NOTHING", "COMPLETE", "CANCEL"]; // Define sorting criteria
 
   const subfolders = folder.getFolders(); // Retrieve all subfolders in the current folder
   while (subfolders.hasNext()) {
@@ -16,8 +16,8 @@ function scanAndOrganizeSubfolders(folder, baseParentFolder) {
     if (nameComponents.length >= 2 && sortingWords.includes(nameComponents[1])) {
       const word = nameComponents[1]; // The sorting word from folder name
       const dateString = nameComponents[0]; // The date string from folder name
-      if (dateString.length === 10) { // Ensure date string is of expected length
-        const month = dateString.substring(2, 4); // Extract month from date string
+      if (dateString.length === 15) { // Ensure date string is of expected length for 'yyyyMMdd-HHmm'
+        const month = dateString.substring(4, 6); // Extract month from date string
         // Check if subfolder is already sorted correctly to avoid unnecessary moves
         if (!isSubfolderAlreadySorted(subfolder, baseParentFolder, word, month)) {
           const subfolderPath = `${word}/${month}`; // Construct expected folder path
